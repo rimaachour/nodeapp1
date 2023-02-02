@@ -1,4 +1,4 @@
-//unHash a string of data and return the original data 
+//unHash a string of data and return the original data
 const bcrypt = require("bcrypt");
 
 const verifyHashedData = async (data, hashedData) => {
