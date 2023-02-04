@@ -1,8 +1,9 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto"); 
 //const { findOne } = require("../models/User");
 
-// const nodemailer = require("nodemailer");
+const nodemailer = require("nodemailer");
 const router = express.Router();
 //const {User} = require("../models/User");
 
@@ -134,26 +135,107 @@ router.get("/user", checkPermission("user"), (req, res) => {
 
 // Create a new transporter for sending emails
 
+//emailer 
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: "your_email_address@gmail.com", // generated ethereal email address
+    pass: "your_email_password" // generated ethereal password
+  }
+});
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
 
-
   // Check if the email exists in the database
-  connection.query(
-      "SELECT * FROM user WHERE email = ?",
-      [email],
-      function (error, results) {
-        if (error) {
-          console.log("Error finding user: ", error);
-          return res.status(500).send({ error: "Error finding user" });
-        }
-  
-        if (!results.length) {
-          return res.status(400).send({ error: "Username not found" });
-        }
-        const user = results[0];
-      });
-    });
+  const [rows, fields] = await connection.execute(
+    "SELECT * FROM users WHERE email = ?",
+    [email]
+  );
+
+  if (!rows.length) {
+    return res.status(400).send({ error: "Email not found" });
+  }
+
+  // Generate a unique token for the password reset
+  const token = crypto.randomBytes(20).toString("hex");
+
+  // Store the token, email, and expiration date in the database
+  const expirationDate = new Date(Date.now() + 3600000); // 1 hour
+  await connection.execute(
+    "INSERT INTO password_resets (email, token, expiration_date) VALUES (?, ?, ?)",
+    [email, token, expirationDate]
+  );
+
+  // Send an email to the user with the password reset link
+  const mailOptions = {
+    from: '"Your App" <your_email_address@gmail.com>', // sender address
+    to: email, // list of receivers
+    subject: "Password Reset", // Subject line
+    text: `Click the link to reset your password: http://localhost:3000/reset-password/${token}`, // plain text body
+    html: `<p>Click the link to reset your password:</p><a href="http://localhost:3000/reset-password/${token}">Reset password</a>` // html body
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return console.log(error);
+    }
+    console.log("Message sent: %s", info.messageId);
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+  });
+
+  res.send({ message: "Password reset email sent" });
+});
+
+router.post("/reset-password/:token", async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  // Check if the token is valid
+  const [rows, fields] = await connection.execute(
+    "SELECT * FROM password_resets WHERE token = ? AND expiration_date > NOW()",
+    [token]
+  );
+
+  if (!rows.length) {
+    return res.status(400).send({ error: "Token is invalid or has expired" });
+  }
+
+  const email = rows[0].email;
+
+  // Update the user's password
+  await connection.execute("UPDATE users SET password = ? WHERE email = ?", [
+    password,
+    email
+  ]);
+
+  // Delete the token
+  await connection.execute("DELETE FROM password_resets WHERE token = ?", [
+    token
+  ]);
+
+  res.send({ message: "Password updated successfully" });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 router.get("/secret", authenticateUser, (req, res) => {
   res.send("Secret message: Only accessible by authenticated users");
