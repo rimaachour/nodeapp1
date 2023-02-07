@@ -12,6 +12,7 @@ const { authenticateUser } = require("./../../security/stategy");
 
 //Connection to the database file
 const mysql = require("mysql2");
+module.exports = router;
 
 const connection = mysql.createConnection({
 host: "localhost",
@@ -218,27 +219,8 @@ router.post("/reset-password/:token", async (req, res) => {
   res.send({ message: "Password updated successfully" });
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 router.get("/secret", authenticateUser, (req, res) => {
   res.send("Secret message: Only accessible by authenticated users");
 });
-module.exports = router;
+
       
