@@ -17,6 +17,4 @@ app.all('*',(req,res,next)=>{
      message :'Page Note Found !'
   })
 })
-
-
 module.exports = app;

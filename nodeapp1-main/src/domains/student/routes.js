@@ -9,6 +9,12 @@ const router = express.Router();
 module.exports = router;
 
 
+
+  
+
+
+
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       cb(null, "./uploads")
@@ -51,12 +57,12 @@ const connection = mysql.createConnection({
               );
             });
     
-            app.get('/download/:pdf_id', (req, res) => {
+           app.get('/download/:pdf_id', (req, res) => {
                 connection.query(
                   'SELECT pdf_column FROM table_name WHERE id = ?',
-                  [req.params.pdf_id],
+                 [req.params.pdf_id],
                   (error, results) => {
-                    if (error) throw error;
+                   if (error) throw error;
                     if (!results.length) {
                       return res.status(404).send('PDF not found.');
                     }
@@ -67,9 +73,64 @@ const connection = mysql.createConnection({
                 );
               });
               
-              app.listen(3000, () => {
-                console.log('Server running on port 3000.');
-              });
+              //app.listen(8080, () => {
+               // console.log('Server running on port 3000.');
+              //});
+    
+    
+    
+    // partie crud 
+
+    // Create a new student
+    router.post('/students', (req, res) => {
+      const {nom,prenom,email,specialité  } = req.body;
+      const sql = `INSERT INTO students (nom, prenom, email, specialité) VALUES ('${nom}', '${prenom}', '${email}','${specialité}')`;
+      
+      connection.query(sql, (error, results) => {
+        if (error) throw error;
+        res.send('Student added successfully.');
+      });
+    });
+    
+   
+router.get('/students', (req, res) => {
+  connection.query('SELECT * FROM students', (error, results) => {
+    if (error) throw error;
+    res.send(results);
+  });
+});
+
+// Retrieve a single student by id
+router.get('/students/:id', (req, res) => {
+  const id = req.params.id;
+  connection.query('SELECT * FROM students WHERE id = ?', id, (error, results) => {
+    if (error) throw error;
+    res.send(results[0]);
+  });
+});
+
+// Update a student by id
+router.put('/students/:id', (req, res) => {
+  const id = req.params.id;
+  const student = req.body;
+  connection.query('UPDATE students SET ? WHERE id = ?', [student, id], (error, results) => {
+    if (error) throw error;
+    res.send(`Student updated with ID: ${id}`);
+  });
+});
+
+// Delete a student by id
+router.delete('/students/:id', (req, res) => {
+  const id = req.params.id;
+  connection.query('DELETE FROM students WHERE id = ?', id, (error, results) => {
+    if (error) throw error;
+    res.send(`Student deleted with ID: ${id}`);
+  });
+});
+
+
+
+
     
     
     
@@ -80,28 +141,4 @@ const connection = mysql.createConnection({
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    // create a document 
-    
-    //const doc = new PDFDocument();
-    
-    //Pipe its output somewhere , like to a file or HTTP response 
-    // see below for browsr usage 
-    
-    //doc.pipe(fs.createWriteStream('output.pdf'));
-    
-    // set the font size ,and render some text
-    //doc
-    //.fontSize(25)
-    //.text('votre cv',100,100);
-    
-    //finalize pdf file
-//doc.end();    
+      

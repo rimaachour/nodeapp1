@@ -138,12 +138,12 @@ router.get("/user", checkPermission("user"), (req, res) => {
 
 //emailer 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
+  host: process.env.MAIL_SERVER,
+  port: process.env.MAIL_PORT,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: "your_email_address@gmail.com", // generated ethereal email address
-    pass: "your_email_password" // generated ethereal password
+    user: process.env.MAIL_USER, // generated ethereal email address
+    pass: process.env.MAIL_PASS // generated ethereal password
   }
 });
 router.post("/forgot-password", async (req, res) => {
