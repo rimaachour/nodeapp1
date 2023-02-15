@@ -78,6 +78,69 @@ const connection = mysql.createConnection({
               //});
     
     
+
+
+
+// Endpoint to generate PDF file
+app.get('/generate-pdf', (req, res) => {
+  // Query the database to get data for PDF
+  connection.query('SELECT * FROM pddf', (error, results) => {
+    if (error) throw error;
+
+    // Generate HTML for PDF
+    const html = `
+      <h1>PDF File</h1>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+        </tr>
+        ${results.map(row => `
+          <tr>
+            <td>${row.id}</td>
+            <td>${row.name}</td>
+            <td>${row.email}</td>
+          </tr>
+        `).join('')}
+      </table>
+    `;
+
+    // Generate PDF from HTML
+    pdf.create(html).toFile('output.pdf', (err, result) => {
+      if (err) return console.log(err);
+
+      // Send PDF file to client
+      res.setHeader('Content-Type', 'application/pdf');
+      res.sendFile(path.join(__dirname, 'output.pdf'), (error) => {
+        if (error) console.log(error);
+        // Delete the generated PDF file after sending it
+        fs.unlinkSync('output.pdf');
+      });
+    });
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     // partie crud 
 
