@@ -56,7 +56,7 @@ const connection = mysql.createConnection({
                 }
               );
             });
-    
+    //this is nothing but a regular comment
            app.get('/download/:pdf_id', (req, res) => {
                 connection.query(
                   'SELECT pdf_column FROM table_name WHERE id = ?',
