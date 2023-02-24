@@ -62,7 +62,7 @@ const upload = multer({
     }
   }
 });
-
+// nouveau update image 
 app.post('/add', upload.single('image'), (req, res) => {
  const { nom, prenom, email, specialite } = req.body;
   const image = req.file.buffer;
