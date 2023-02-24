@@ -5,8 +5,8 @@ const multer = require('multer');
 const mysql = require("mysql2");
 const app = express();
 const router = express.Router();
-
-module.exports = router;
+module.exports =  app;
+//module.exports = router;
 
 
 
@@ -15,32 +15,74 @@ module.exports = router;
 
 
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, "./uploads")
-    },
-    filename: (req, file, cb) => {
-      cb(null, Date.now() + "-" + file.originalname)
-    },
-  })
+//const storage = multer.diskStorage({
+   // destination: (req, file, cb) => {
+    //  cb(null, "./uploads")
+    //},
+    //filename: (req, file, cb) => {
+      //cb(null, Date.now() + "-" + file.originalname)
+    //},
+  //})
 
-  const upload = multer({ storage: storage })
-const connection = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "test1_db",
-    });
-    connection.connect((err) => {
-        if (err) return console.error(err.message);
-        console.log("Connected to the MySQL database.");
-        });
+  //const upload = multer({ storage: storage })
+//const connection = mysql.createConnection({
+  //  host: "localhost",
+    //user: "root",
+    //password: "",
+    //database: "test1_db",
+    //});
+    //connection.connect((err) => {
+      //  if (err) return console.error(err.message);
+        //console.log("Connected to the MySQL database.");
+        //});
         
+
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: "",
+  database: 'test1_db'
+});
+
+connection.connect();
+
+
+
+
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 1000000 }, // limit file size to 1 MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('File type not allowed.'));
+    }
+  }
+});
+
+app.post('/add', upload.single('image'), (req, res) => {
+ const { nom, prenom, email, specialite } = req.body;
+  const image = req.file.buffer;
+
+  const query = 'INSERT INTO students (nom, prenom, email, image,specialite) VALUES (?, ?, ?, ?, ?)';
+  const params = [nom, prenom, email, specialite,image];
+
+  connection.query(query, params, (error, results, fields) => {
+    if (error) throw error;
+
+    console.log('Student record inserted successfully!');
+    res.send('Student record inserted successfully!');
+  });
+});
+
     
     
         app.post('/upload', upload.single('file'), (req, res) => {
             if (!req.file) {
-              return res.status(400).send('No file uploaded.');
+             return res.status(400).send('No file uploaded.');
             }
             const pdfLink = `uploads/${req.file.filename}`;
             console.log(pdfLink)
