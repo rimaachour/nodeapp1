@@ -19,6 +19,15 @@ const app = require("express")();
 const cors = require("cors");
 const bodyParser = require("express").json;
 const routes = require("./routes");
+//const  engine  = require ('express-handlebars');
+const exphbs = require('express-handlebars');
+//app.engine('handlebars', exphbs({
+  //defaultLayout: 'main',
+  //layoutsDir: path.join(__dirname, 'views/layouts')
+//}));
+
+app.set('view engine', 'pug');
+app.set('views', './views');
 //cors
 app.use(cors());
 //for accepting posts from data

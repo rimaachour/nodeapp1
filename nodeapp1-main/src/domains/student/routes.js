@@ -3,12 +3,13 @@ const PDFDocument = require("pdfkit");
 //const fs = require('fs');
 const multer = require('multer');
 const mysql = require("mysql2");
-const exphbs = require('express-handlebars');
+const pdfMake = require("pdfmake");
+//const exphbs = require('express-handlebars');
 
 const mysqlPormise = require('mysql2/promise') // you import this package when you want to use execute function with the connection
-const app = express();
+//const app = express();
 const router = express.Router();
-const { Router } = require("express");
+//const { Router } = require("express");
 //const app = require("../..");
 
 
@@ -195,70 +196,134 @@ router.post('/add', upload.single('image'), (req, res) => {
                   console.log("Connected to database.");
                 });
 
-                // Configure handlebars as the template engine
-            //router.engine('handlebars', exphbs());
 
-  router.engine('handlebars', exphbs.engine());
 
- router.set('view engine', 'handlebars');
-                router.get('/pdf', async (req, res, next) => {
-                  connection.query('SELECT * FROM students', (err, results) => {
-                    if (err) {
-                      console.error(err);
-                      res.status(500).send('Error retrieving student data from database.');
-                      return;
-                    }
-                
+connection.connect((err) => {
+  if (err) {
+    console.error("Error connecting to database: " + err.stack);
+    return;
+  }
+  console.log("Connected to database.");
+});
 
-    // Render student data as an HTML table using handlebars
-    const template = `
-      <h1>Student Data</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Prenom</th>
-            <th>Email</th>
-            <th>Specialite</th>
-            <th>Image</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each students}}
-            <tr>
-              <td>{{this.nom}}</td>
-              <td>{{this.prenom}}</td>
-              <td>{{this.email}}</td>
-              <td>{{this.specialite}}</td>
-              <td>{{this.image}}</td>
-            </tr>
-          {{/each}}
-        </tbody>
-      </table>
-    `;
-    const handlebars = exphbs.create({});
-    const templateFn = handlebars.compile(template);
-    const html = templateFn({ students: results })
+router.get('/pdf', async (req, res, next) => {
+  connection.query('SELECT * FROM students', (err, results) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error retrieving student data from database.');
+      return;
+    }
+
+
+
+
+
+    
+   
+
+
+
+
+
+
+
+
+// Add table headers
+//doc.font('Helvetica-Bold');
+//doc.fontSize(12);
+//doc.text('Nom', { width: 100, align: 'left' });
+//doc.text('Prenom', { width: 100, align: 'left' });
+//doc.text('Email', { width: 150, align: 'left' });
+//doc.text('Specialite', { width: 100, align: 'left' });
+//doc.text('Image', { width: 100, align: 'left' });
+
+// Add table rows
+//doc.font('Helvetica');
+//doc.fontSize(10);
+//results.forEach((students, index) => {
+//const y = 70 + index * 20; // Calculate vertical position of row
+//doc.text(students.nom, { width: 100, align: 'left', y });
+//doc.text(students.prenom, { width: 100, align: 'left', y });
+//doc.text(students.email, { width: 150, align: 'left', y });
+//doc.text(students.specialite, { width: 100, align: 'left', y });
+//doc.text(students.image, { width: 100, align: 'left', y });
+//});
+
+
+
+
+
+
+    // End the PDF document
+    doc.pipe(fs.createWriteStream('output.pdf'));
+
+    doc.end()
+    ;
+
+});
+});
+
+ // Create PDF document
+ connection.connect((err) => {
+  if (err) {
+    console.error("Error connecting to database: " + err.stack);
+    return;
+  }
+  console.log("Connected to database.");
+});
+
+router.get('/pdf', async (req, res, next) => {
+  connection.query('SELECT * FROM students', (err, results) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error retrieving student data from database.');
+      return;
+    }
 
     // Create PDF document
-                    const doc = new PDFDocument();
-                    res.setHeader('Content-Type', 'application/pdf');
-                    res.setHeader('Content-Disposition', 'attachment; filename=student.pdf');
-                    doc.pipe(res);
-                    doc.font('Helvetica-Bold');
-                    doc.fontSize(16);
-                    doc.text('Student Data', { align: 'center' });
-                    doc.moveDown(0.5);
-                    doc.fontSize(12);
-                    doc.font('Helvetica');
-                    doc.text(html, { align: 'justify' });
-                    doc.end();
-                  });
-                });
+    const doc = new PDFDocument();
+    doc.pipe(res); // Send the PDF file as the response
+
+// Add table headers
+doc.font('Helvetica-Bold');
+doc.fontSize(12);
+doc.text('Nom', { width: 100, align: 'left' });
+doc.text('Prenom', { width: 100, align: 'left' });
+doc.text('Email', { width: 150, align: 'left' });
+doc.text('Specialite', { width: 100, align: 'left' });
+doc.text('Image', { width: 100, align: 'left' });
+
+// Add table rows
+doc.font('Helvetica');
+doc.fontSize(10);
+results.forEach((students, index) => {
+const y = 70 + index * 20; // Calculate vertical position of row
+doc.text(students.nom, { width: 100, align: 'left', y });
+doc.text(students.prenom, { width: 100, align: 'left', y });
+doc.text(students.email, { width: 150, align: 'left', y });
+doc.text(students.specialite, { width: 100, align: 'left', y });
+doc.text(students.image, { width: 100, align: 'left', y });
+});
 
 
 
-    //doc.text("Table Data:");
+
+
+
+    // End the PDF document
+    doc.end()
+    ;
+
+});
+});
+
+
+
+
+
+
+
+//doc.text("Table Data:");
     //doc.moveDown();
     //doc.table({
       //headers: Object.keys(results[0]),
@@ -337,3 +402,15 @@ module.exports = router;
     
     
       
+
+
+
+
+
+
+
+
+
+
+
+
